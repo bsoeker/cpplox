@@ -1,0 +1,6 @@
+build/
+perf/
+.cache/
+report
+ex/
+*.json
