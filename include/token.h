@@ -14,6 +14,10 @@ public:
   Token(TokenType type, std::string lexeme, LiteralValue literal, int line)
       : type_(type), lexeme_(lexeme), literal_(literal), line_(line) {}
   friend std::ostream& operator<<(std::ostream&, const Token&);
+  const std::string& lexeme() const { return lexeme_; }
+  TokenType type() const { return type_; }
+  int line() const { return line_; }
+  const LiteralValue& literal() const { return literal_; }
 
 private:
   TokenType type_;

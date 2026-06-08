@@ -1,4 +1,6 @@
 #include "error.h"
+#include "expr.h"
+#include "parser.h"
 #include "scanner.h"
 #include <cstdlib>
 #include <fstream>
@@ -15,7 +17,7 @@ void run(const std::string&);
 
 int main(int argc, char* argv[]) {
   if (argc > 2)
-    std::cout << "usage: cpplox [script]";
+    std::cout << "usage: lox [script]";
   else if (argc == 2)
     run_file(argv[1]);
   else
@@ -40,7 +42,7 @@ void run_file(const std::string& path) {
     throw std::runtime_error("Failed to read file: " + path);
 
   run(std::string(buffer.begin(), buffer.end()));
-  if (had_error)
+  if (Lox::had_error)
     std::exit(65);
 }
 
@@ -53,7 +55,7 @@ void run_prompt() {
       break;
 
     run(line);
-    had_error = false;
+    Lox::had_error = false;
   }
 }
 
@@ -61,7 +63,12 @@ void run(const std::string& source) {
   Scanner scanner(source);
   std::vector<Token> tokens = scanner.ScanTokens();
 
-  for (auto token : tokens) {
-    std::cout << token << "\n";
-  }
+  Parser parser(tokens);
+  Expr expression = parser.Parse();
+
+  if (Lox::had_error)
+    return;
+
+  PrintAST(expression);
+  std::cout << "\n";
 }
