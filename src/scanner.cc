@@ -1,6 +1,6 @@
 #include "scanner.h"
+#include "compile_error.h"
 #include "token_type.h"
-#include <iostream>
 #include <string_view>
 #include <unordered_map>
 
@@ -102,8 +102,7 @@ void Scanner::ScanToken() {
     } else if (IsAlpha(c)) {
       Identifier();
     } else {
-      std::cerr << "[" << line_ << "] Error: Unexpected character: " << c
-                << "\n";
+      Lox::Error::Log(line_, "Unexpected character.");
     }
     break;
   }
@@ -131,7 +130,7 @@ void Scanner::String() {
   }
 
   if (IsAtEnd()) {
-    std::cerr << "[" << line_ << "] Error: Unterminated string.\n";
+    Lox::Error::Log(line_, "Unterminated string.");
     return;
   }
 

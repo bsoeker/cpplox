@@ -10,7 +10,6 @@ struct GroupingExpression;
 struct LiteralExpression;
 struct UnaryExpression;
 
-using Nil = std::monostate;
 using Expr = std::variant<
     Nil, std::unique_ptr<BinaryExpression>, std::unique_ptr<GroupingExpression>,
     std::unique_ptr<LiteralExpression>, std::unique_ptr<UnaryExpression>>;
@@ -41,7 +40,5 @@ struct UnaryExpression {
   Token op_;
   std::unique_ptr<Expr> right_;
 };
-
-void PrintAST(const Expr& expr);
 
 #endif // !EXPR_H

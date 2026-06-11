@@ -1,10 +1,10 @@
 #ifndef PARSER_H
 #define PARSER_H
 
+#include "compile_error.h"
 #include "expr.h"
 #include "token.h"
 #include "token_type.h"
-#include <exception>
 #include <string>
 #include <vector>
 
@@ -12,10 +12,6 @@ class Parser {
 public:
   explicit Parser(std::vector<Token> tokens);
   Expr Parse();
-  // Nested exception class
-  struct ParseError : std::exception {
-    const char* what() const noexcept override { return "Lox Parse error"; }
-  };
 
 private:
   Expr ParseExpression();
@@ -34,7 +30,7 @@ private:
   Token Previous();
 
   Token Consume(TokenType type, std::string message);
-  ParseError Error(Token token, std::string message);
+  Lox::Error::CompileError Error(Token token, std::string message);
   void Synchronize();
 
   std::vector<Token> tokens_;

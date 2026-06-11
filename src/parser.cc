@@ -1,16 +1,15 @@
 #include "parser.h"
+#include "compile_error.h"
 #include "expr.h"
 #include "token_type.h"
-#include <error.h>
 #include <memory>
-#include <variant>
 
 Parser::Parser(std::vector<Token> tokens) : tokens_(tokens) {}
 
 Expr Parser::Parse() {
   try {
     return ParseExpression();
-  } catch (const ParseError& error) {
+  } catch (const Lox::Error::CompileError& error) {
     return Nil{};
   }
 }
@@ -117,10 +116,10 @@ Token Parser::Consume(TokenType type, std::string message) {
 
   throw Error(Peek(), message);
 }
-Parser::ParseError Parser::Error(Token token, std::string message) {
-  Lox::LogError(token, message);
+Lox::Error::CompileError Parser::Error(Token token, std::string message) {
+  Lox::Error::Log(token, message);
 
-  return ParseError();
+  return Lox::Error::CompileError();
 }
 void Parser::Synchronize() {
   Advance();

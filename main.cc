@@ -1,6 +1,9 @@
-#include "error.h"
+#include "ast_printer.h"
+#include "compile_error.h"
 #include "expr.h"
+#include "interpreter.h"
 #include "parser.h"
+#include "runtime_error.h"
 #include "scanner.h"
 #include <cstdlib>
 #include <fstream>
@@ -42,8 +45,10 @@ void run_file(const std::string& path) {
     throw std::runtime_error("Failed to read file: " + path);
 
   run(std::string(buffer.begin(), buffer.end()));
-  if (Lox::had_error)
+  if (Lox::Error::had_compile_error)
     std::exit(65);
+  if (Lox::Error::had_runtime_error)
+    std::exit(70);
 }
 
 void run_prompt() {
@@ -55,7 +60,7 @@ void run_prompt() {
       break;
 
     run(line);
-    Lox::had_error = false;
+    Lox::Error::had_compile_error = false;
   }
 }
 
@@ -66,9 +71,10 @@ void run(const std::string& source) {
   Parser parser(tokens);
   Expr expression = parser.Parse();
 
-  if (Lox::had_error)
+  if (Lox::Error::had_compile_error)
     return;
 
-  PrintAST(expression);
-  std::cout << "\n";
+  Interpreter interpreter;
+  interpreter.Interpret(expression);
+  std::cout << std::endl;
 }

@@ -7,7 +7,8 @@
 #include <type_traits>
 #include <variant>
 
-using LiteralValue = std::variant<std::monostate, bool, double, std::string>;
+using Nil = std::monostate;
+using LiteralValue = std::variant<Nil, bool, double, std::string>;
 
 class Token {
 public:
@@ -34,7 +35,7 @@ inline std::ostream& operator<<(std::ostream& os, const Token& token) {
   std::visit(
       [&os](const auto& value) {
         using T = std::decay_t<decltype(value)>;
-        if constexpr (std::is_same_v<T, std::monostate>)
+        if constexpr (std::is_same_v<T, Nil>)
           os << "nil";
         else if constexpr (std::is_same_v<T, bool>)
           os << (value ? "true" : "false");
