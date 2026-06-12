@@ -1,19 +1,43 @@
 #include "parser.h"
 #include "compile_error.h"
 #include "expr.h"
+#include "stmt.h"
 #include "token_type.h"
 #include <memory>
+#include <vector>
 
 Parser::Parser(std::vector<Token> tokens) : tokens_(tokens) {}
 
-Expr Parser::Parse() {
-  try {
-    return ParseExpression();
-  } catch (const Lox::Error::CompileError& error) {
-    return Nil{};
+std::unique_ptr<std::vector<Stmt>> Parser::Parse() {
+  auto statements = std::make_unique<std::vector<Stmt>>();
+  while (!IsAtEnd()) {
+    statements->push_back(ParseStatement());
   }
+
+  return statements;
 }
+
 Expr Parser::ParseExpression() { return ParseEquality(); }
+
+Stmt Parser::ParseStatement() {
+  if (Match({TokenType::kPrint}))
+    return PrintStatement();
+
+  return ExpressionStatement();
+}
+
+Stmt Parser::PrintStatement() {
+  Expr value = ParseExpression();
+  Consume(TokenType::kSemicolon, "Expect ';' after value.");
+  return std::make_unique<Print>(std::move(value));
+}
+
+Stmt Parser::ExpressionStatement() {
+  Expr value = ParseExpression();
+  Consume(TokenType::kSemicolon, "Expect ';' after value.");
+  return std::make_unique<Print>(std::move(value));
+}
+
 Expr Parser::ParseEquality() {
   Expr expr = ParseComparison();
   while (Match({TokenType::kBangEqual, TokenType::kEqualEqual})) {
@@ -25,6 +49,7 @@ Expr Parser::ParseEquality() {
 
   return expr;
 }
+
 Expr Parser::ParseComparison() {
   Expr expr = ParseTerm();
   while (Match({TokenType::kGreater, TokenType::kGreaterEqual, TokenType::kLess,
@@ -37,6 +62,7 @@ Expr Parser::ParseComparison() {
 
   return expr;
 }
+
 Expr Parser::ParseTerm() {
   Expr expr = ParseFactor();
   while (Match({TokenType::kMinus, TokenType::kPlus})) {
@@ -48,6 +74,7 @@ Expr Parser::ParseTerm() {
 
   return expr;
 }
+
 Expr Parser::ParseFactor() {
   Expr expr = ParseUnary();
   while (Match({TokenType::kStar, TokenType::kSlash})) {
@@ -59,6 +86,7 @@ Expr Parser::ParseFactor() {
 
   return expr;
 }
+
 Expr Parser::ParseUnary() {
   if (Match({TokenType::kBang, TokenType::kMinus})) {
     Token op = Previous();
@@ -68,6 +96,7 @@ Expr Parser::ParseUnary() {
 
   return ParsePrimary();
 }
+
 Expr Parser::ParsePrimary() {
   if (Match({TokenType::kFalse}))
     return std::make_unique<LiteralExpression>(false);
@@ -96,18 +125,23 @@ bool Parser::Match(const std::vector<TokenType>& types) {
 
   return false;
 }
+
 bool Parser::Check(TokenType type) {
   if (IsAtEnd())
     return false;
   return Peek().type() == type;
 }
+
 bool Parser::IsAtEnd() { return Peek().type() == TokenType::kEof; }
+
 Token Parser::Advance() {
   if (!IsAtEnd())
     current_++;
   return Previous();
 }
+
 Token Parser::Peek() { return tokens_.at(current_); }
+
 Token Parser::Previous() { return tokens_.at(current_ - 1); }
 
 Token Parser::Consume(TokenType type, std::string message) {
@@ -116,11 +150,13 @@ Token Parser::Consume(TokenType type, std::string message) {
 
   throw Error(Peek(), message);
 }
+
 Lox::Error::CompileError Parser::Error(Token token, std::string message) {
   Lox::Error::Log(token, message);
 
   return Lox::Error::CompileError();
 }
+
 void Parser::Synchronize() {
   Advance();
   while (!IsAtEnd()) {
