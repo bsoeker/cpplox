@@ -19,13 +19,16 @@ void Log(Token token, const std::string& message) {
     Report(token.line(), " at end", message);
   else
     Report(token.line(), " at '" + token.lexeme() + "'", message);
-
-  had_compile_error = true;
 }
 
 void Log(RuntimeError error) {
-  Log(error.token, error.what());
+  Log(error.token_, error.what());
   had_runtime_error = true;
+}
+
+void Log(CompileError error) {
+  Log(error.token_, error.what());
+  had_compile_error = true;
 }
 
 void Report(int line, const std::string& where, const std::string& message) {

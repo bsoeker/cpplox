@@ -1,10 +1,9 @@
-#include "ast_printer.h"
 #include "compile_error.h"
-#include "expr.h"
 #include "interpreter.h"
 #include "parser.h"
 #include "runtime_error.h"
 #include "scanner.h"
+#include "stmt.h"
 #include <cstdlib>
 #include <fstream>
 #include <ios>
@@ -69,12 +68,12 @@ void run(const std::string& source) {
   std::vector<Token> tokens = scanner.ScanTokens();
 
   Parser parser(tokens);
-  Expr expression = parser.Parse();
+  std::vector<Stmt> statements = parser.Parse();
 
   if (Lox::Error::had_compile_error)
     return;
 
   Interpreter interpreter;
-  interpreter.Interpret(expression);
+  interpreter.Interpret(statements);
   std::cout << std::endl;
 }

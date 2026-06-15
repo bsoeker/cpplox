@@ -5,14 +5,25 @@
 #include <memory>
 #include <variant>
 
+struct AssignmentExpression;
 struct BinaryExpression;
 struct GroupingExpression;
 struct LiteralExpression;
 struct UnaryExpression;
+struct VariableExpression;
 
 using Expr = std::variant<
-    Nil, std::unique_ptr<BinaryExpression>, std::unique_ptr<GroupingExpression>,
-    std::unique_ptr<LiteralExpression>, std::unique_ptr<UnaryExpression>>;
+    Nil, std::unique_ptr<AssignmentExpression>,
+    std::unique_ptr<BinaryExpression>, std::unique_ptr<GroupingExpression>,
+    std::unique_ptr<LiteralExpression>, std::unique_ptr<UnaryExpression>,
+    std::unique_ptr<VariableExpression>>;
+
+struct AssignmentExpression {
+  AssignmentExpression(Token variable_name, Expr value);
+
+  Token variable_name_;
+  std::unique_ptr<Expr> value_;
+};
 
 struct BinaryExpression {
   BinaryExpression(Expr left, Token op, Expr right);
@@ -39,6 +50,12 @@ struct UnaryExpression {
 
   Token op_;
   std::unique_ptr<Expr> right_;
+};
+
+struct VariableExpression {
+  VariableExpression(Token variable_name);
+
+  Token variable_name_;
 };
 
 #endif // !EXPR_H

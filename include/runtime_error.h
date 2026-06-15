@@ -10,10 +10,10 @@ namespace Lox::Error {
 extern bool had_runtime_error;
 
 struct RuntimeError : public std::runtime_error {
-  Token token;
-
   RuntimeError(Token token, const std::string& message)
-      : std::runtime_error(message), token(token) {}
+      : std::runtime_error(message), token_(token) {}
+
+  Token token_;
 };
 
 void Log(RuntimeError error);

@@ -6,20 +6,23 @@
 #include "stmt.h"
 #include "token.h"
 #include "token_type.h"
-#include <memory>
 #include <string>
+#include <type_traits>
 #include <vector>
 
 class Parser {
 public:
   explicit Parser(std::vector<Token> tokens);
-  std::unique_ptr<std::vector<Stmt>> Parse();
+  std::vector<Stmt> Parse();
 
 private:
-  Expr ParseExpression();
+  Stmt ParseDeclaration();
+  Stmt ParseVarDeclaration();
   Stmt ParseStatement();
-  Stmt PrintStatement();
-  Stmt ExpressionStatement();
+  Stmt ParsePrintStatement();
+  Stmt ParseExpressionStatement();
+  Expr ParseExpression();
+  Expr ParseAssignment();
   Expr ParseEquality();
   Expr ParseComparison();
   Expr ParseTerm();
@@ -27,7 +30,17 @@ private:
   Expr ParseUnary();
   Expr ParsePrimary();
 
-  bool Match(const std::vector<TokenType>& types);
+  template <typename... Args>
+    requires(std::is_same_v<Args, TokenType> && ...)
+  bool Match(Args... types) {
+    if ((Check(types) || ...)) {
+      Advance();
+      return true;
+    }
+
+    return false;
+  }
+
   bool Check(TokenType type);
   bool IsAtEnd();
   Token Advance();

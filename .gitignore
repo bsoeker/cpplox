@@ -4,3 +4,4 @@ perf/
 report
 ex/
 *.json
+*.lox

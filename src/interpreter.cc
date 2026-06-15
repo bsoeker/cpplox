@@ -22,6 +22,13 @@ bool Interpreter::IsTruthy(const LiteralValue value) {
 LiteralValue Interpreter::Evaluate(const Expr& expr) {
   return std::visit(
       overloaded{
+          [](Nil) -> LiteralValue { return Nil{}; },
+          [this](
+              const std::unique_ptr<AssignmentExpression>& a) -> LiteralValue {
+            LiteralValue value = Evaluate(*a->value_);
+            environment.Assign(a->variable_name_, value);
+            return value;
+          },
           [](const std::unique_ptr<LiteralExpression>& l) -> LiteralValue {
             return l->value_;
           },
@@ -142,7 +149,9 @@ LiteralValue Interpreter::Evaluate(const Expr& expr) {
               std::unreachable();
             }
           },
-          [](Nil) -> LiteralValue { return Nil{}; }
+          [this](const std::unique_ptr<VariableExpression>& v) -> LiteralValue {
+            return environment.get(v->variable_name_);
+          }
 
       },
       expr);
@@ -168,10 +177,32 @@ std::string Interpreter::Stringify(const LiteralValue value) {
       value);
 }
 
-void Interpreter::Interpret(const Expr& expr) {
+void Interpreter::Execute(const Stmt& stmt) {
+  std::visit(overloaded{[](Invalid) { return; },
+                        [this](const std::unique_ptr<Expression>& e) {
+                          Evaluate(e->expr_);
+                        },
+                        [this](const std::unique_ptr<Print>& p) {
+                          LiteralValue value = Evaluate(p->expr_);
+                          std::cout << Stringify(value);
+                        },
+                        [this](const std::unique_ptr<VariableDeclaration>& v) {
+                          LiteralValue value;
+
+                          // Index 0 = Nil
+                          if (v->initializer_.index() != 0)
+                            value = Evaluate(v->initializer_);
+
+                          environment.Define(v->variable_name_.lexeme(), value);
+                        }},
+             stmt);
+}
+
+void Interpreter::Interpret(const std::vector<Stmt>& statements) {
   try {
-    LiteralValue value = Evaluate(expr);
-    std::cout << Stringify(value);
+    for (auto& stmt : statements)
+      Execute(stmt);
+
   } catch (Lox::Error::RuntimeError error) {
     Lox::Error::Log(error);
   }
